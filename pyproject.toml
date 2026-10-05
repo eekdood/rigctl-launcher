@@ -25,3 +25,6 @@ license-files = ["license.txt"]
 
 [tool.setuptools.packages.find]
 include = ["rigctl_launcher*"]
+
+[tool.setuptools.package-data]
+rigctl_launcher = ["legal/*.txt"]

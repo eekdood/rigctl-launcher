@@ -1,0 +1,6 @@
+RigCtl-Launcher uses Qt and PySide6 (Qt for Python), copyright The Qt Company Ltd. and contributors, under their open-source LGPLv3/GPL licensing options. See the included GPLv3 and LGPLv3 texts.
+
+pySerial is used under its BSD license. Exact component versions, upstream copyrights and additional terms for packaged builds are included in this application's licenses and in the release inventory.
+
+Application and dependency sources are available from the matching GitHub release:
+https://github.com/eekdood/rigctl-launcher/releases

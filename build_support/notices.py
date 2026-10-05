@@ -182,6 +182,19 @@ def collect_notices(report, entries, destination, cache):
             report.setdefault('embedded_runtime_dependencies', []).append({'name': source_name, 'version': version,
                       'version_source': 'CPython Windows build manifest', 'notice_catalog': name})
 
+        # CPython maintains Windows-specific external sources and build patches.
+        # Preserve these alongside upstream originals in the source downloads.
+        externals = list(report.get('embedded_runtime_dependencies', []))
+        externals += [{'name': 'openssl' if c['name'] == 'openssl' else 'libffi',
+                       'version': '.'.join(c['version'].split('.')[:3]) if c['name'] == 'openssl' else
+                       re.search(r'libffi-(\d+\.\d+\.\d+)', props_text).group(1)}
+                      for c in report['components'] if c['provider'] == 'windows-native-library']
+        for external in externals:
+            tag = external['name'] + '-' + external['version']
+            name = 'cpython-external-' + tag
+            url = f'https://codeload.github.com/python/cpython-source-deps/tar.gz/refs/tags/{tag}'
+            catalog[name] = archive_notices(cache.fetch(url), licenses / name, url)
+
     covered = []
     for component in report['components']:
         provider = component['provider']
@@ -263,8 +276,8 @@ def collect_notices(report, entries, destination, cache):
             'Upstream copyrights and license statements are preserved under licenses/.',
             'Qt catalogs conservatively include notices from the matching source modules;',
             'some catalog entries may describe code not used by this build.',
-            'License inclusion is not a claim that source-distribution obligations are complete.',
-            'Corresponding source availability is a separate release requirement.', '',
+            'Matching source archives and build instructions accompany the release downloads:',
+            'https://github.com/eekdood/rigctl-launcher/releases', '',
             'Hamlib is neither installed nor bundled by this application.', '', *covered, '',
             'PyInstaller permits distribution of generated applications under their own licenses;',
             'its supplied exception is retained for reference.', '']

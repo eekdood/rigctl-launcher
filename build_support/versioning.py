@@ -72,7 +72,7 @@ def windows_resource(details):
 '''
 
 
-def write_spec(root, system=None):
+def write_spec(root, system=None, legal_root=None):
     root = Path(root).resolve()
     system = (system or platform.system()).lower()
     details = version_details(root)
@@ -86,9 +86,10 @@ def write_spec(root, system=None):
     plist = {'CFBundleName': DISPLAY_NAME, 'CFBundleDisplayName': DISPLAY_NAME,
              'CFBundleShortVersionString': details['numeric_version'],
              'CFBundleVersion': details['numeric_version'], 'RigCtlLauncherVersion': details['version']}
+    legal_root = Path(legal_root or root / 'rigctl_launcher' / 'legal')
     text = f'''# Generated from pyproject.toml; source paths stay in ignored build storage.
 a = Analysis([{str(root / 'packaging' / 'entrypoint.py')!r}], pathex=[{str(root)!r}],
- binaries=[], datas=[({str(root / 'license.txt')!r}, '.'), ({str(metadata)!r}, '.')],
+ binaries=[], datas=[({str(root / 'license.txt')!r}, '.'), ({str(metadata)!r}, '.'), ({str(legal_root)!r}, 'legal')],
  hiddenimports=[], hookspath=[{str(root / 'packaging' / 'hooks')!r}],
  hooksconfig={{}}, runtime_hooks=[], excludes=[], noarchive=False, optimize=0)
 pyz = PYZ(a.pure)

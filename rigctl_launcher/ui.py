@@ -18,6 +18,7 @@ from .processes import Manager
 from .profiles import Settings, Store
 from .executable import INSTALL_MESSAGE, locate_executable
 from .version import application_version
+from .about import AboutDialog
 
 
 def button(text, callback):
@@ -252,6 +253,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("RigCtl-Launcher")
         self.resize(1340, 780)
+        self.menuBar().addMenu('Help').addAction('About / Licenses…', lambda: AboutDialog(self).exec())
         self.store = store or Store()
         self.profiles = self.store.load_profiles()
         self.settings = self.store.load_settings()
