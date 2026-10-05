@@ -105,6 +105,8 @@ def build_sources(report, entries, root, output, cache, native=None):
     root, output = Path(root), Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     manifest = {'application': report['application'], 'target': report['target'], 'upstream': [], 'native': []}
+    if 'build' in report:
+        manifest['build'] = report['build']
     with tempfile.TemporaryDirectory(prefix='source-layout-', dir=root / 'build') as temporary:
         layout = Path(temporary)
         upstream = layout / 'upstream'

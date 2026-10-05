@@ -48,7 +48,7 @@ def combine_sources(reports, destination):
                 manifest = read_json(archive, members, 'manifest.json')
                 if read_json(archive, members, 'inventory.json') != inventory:
                     raise ValueError(f'Source inventory differs from package inventory: {label}')
-                if manifest['application'] != inventory['application'] or manifest['target'] != inventory['target']:
+                if manifest['application'] != inventory['application'] or manifest['target'] != inventory['target'] or manifest.get('build') != inventory.get('build'):
                     raise ValueError(f'Source provenance differs from package: {label}')
                 platform_root = 'platforms/' + label
                 platform_files = {'manifest.json'}
@@ -94,18 +94,21 @@ def combine_sources(reports, destination):
             'The platform inventory records the matching binary download and versions.\n')
 
 
-def prepare_release(inputs, destination, version, expected_systems=('darwin', 'windows', 'linux')):
+def prepare_release(inputs, destination, version, expected_systems=('darwin', 'windows', 'linux'), *, identity=None):
     inputs, destination = Path(inputs).resolve(), Path(destination).resolve()
     if inputs == destination or inputs.is_relative_to(destination) or destination.is_relative_to(inputs):
         raise ValueError('Release input and output directories must be separate')
+    identity = identity or {'kind': 'release', 'name': version}
     reports, applications = [], []
     systems, commits, labels = set(), set(), set()
     for path in sorted(inputs.glob('*.inventory.json')):
         inventory = json.loads(path.read_text())
         if inventory['application']['version'] != version:
             raise ValueError('Package version differs from release version')
+        if inventory.get('build', {'kind': 'release', 'name': version}) != identity:
+            raise ValueError('Build identity differs across downloads or from requested build')
         target = inventory['target']
-        label = archive_label({'version': version}, target['os'], target['architecture'])
+        label = archive_label({'version': version}, target['os'], target['architecture'], build_name=identity['name'])
         if path.name != label + '.inventory.json' or label in labels:
             raise ValueError('Duplicate or unexpected package inventory name')
         labels.add(label)
@@ -124,7 +127,7 @@ def prepare_release(inputs, destination, version, expected_systems=('darwin', 'w
         staging = Path(temporary)
         for application in applications:
             shutil.copyfile(application, staging / application.name)
-        combine_sources(reports, staging / f'rigctl-launcher_{version}_sources.zip')
+        combine_sources(reports, staging / f'rigctl-launcher_{identity["name"]}_sources.zip')
         files = sorted(staging.iterdir())
         (staging / 'checksums.txt').write_text(''.join(f'{digest(path)}  {path.name}\n' for path in files))
         if destination.exists():

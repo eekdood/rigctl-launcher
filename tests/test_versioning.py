@@ -81,3 +81,23 @@ def test_runtime_uses_only_packaged_public_version_when_frozen(tmp_path, monkeyp
 def test_source_runtime_version_matches_project():
     root = Path(__file__).resolve().parents[1]
     assert application_version() == version_details(root)['version']
+
+
+def test_download_names_distinguish_pr_manual_and_tagged_release(tmp_path):
+    from build_support.naming import build_identity
+    commit = 'a1b2c3d' + '0' * 33
+    event = tmp_path / 'event.json'
+    event.write_text('{"number": 7}')
+    pr = build_identity('0.1.0', commit, {'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_EVENT_PATH': str(event)})
+    assert pr == {'kind': 'pull_request', 'name': 'pr-7_a1b2c3d'}
+    assert archive_label({'version': '0.1.0'}, 'darwin', 'arm64', build_name=pr['name']) == 'rigctl-launcher_pr-7_a1b2c3d_macos-arm64'
+    tag = {'GITHUB_EVENT_NAME': 'push', 'GITHUB_REF': 'refs/tags/v0.1.0'}
+    assert build_identity('0.1.0', commit, tag) == {'kind': 'release', 'name': '0.1.0'}
+    tag['GITHUB_EVENT_NAME'] = 'workflow_dispatch'
+    assert build_identity('0.1.0', commit, tag) == {'kind': 'development', 'name': 'dev_a1b2c3d'}
+    assert build_identity('0.1.0', commit, {})['name'] == 'dev_a1b2c3d'
+    with pytest.raises(ValueError, match='tag must match'):
+        build_identity('0.2.0', commit, {**tag, 'GITHUB_EVENT_NAME': 'push'})
+    event.write_text('{"number": "7/unsafe"}')
+    with pytest.raises(ValueError, match='positive integer'):
+        build_identity('0.1.0', commit, {'GITHUB_EVENT_NAME': 'pull_request', 'GITHUB_EVENT_PATH': str(event)})

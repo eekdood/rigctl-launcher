@@ -147,11 +147,13 @@ def artifact_files(target):
 
 
 def write_inventory(target, work, root, destination):
+    from .naming import build_identity
     from PySide6.QtCore import qVersion
     owners, packages = distribution_files()
     components, files = describe_sources(collected_entries(work), owners, packages, root)
     commit = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, capture_output=True, text=True, check=True).stdout.strip()
     report = {'schema_version': 1, 'application': {'name': 'rigctl-launcher', 'version': project_version(root), 'commit': commit},
+              'build': build_identity(project_version(root), commit),
               'target': {'os': platform.system().lower(), 'architecture': platform.machine().lower()},
               'runtime': {'python': platform.python_version(), 'qt': qVersion()},
               'build_tools': [packages[key] for key in ('pyinstaller', 'pyinstaller-hooks-contrib') if key in packages],
