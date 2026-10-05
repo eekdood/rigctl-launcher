@@ -9,9 +9,9 @@ from build_support.notices import SourceCache
 from build_support.sources import build_sources
 
 if __name__ == '__main__':
-    for path in sorted((ROOT / 'artifacts' / 'packages').glob('*.inventory.json')):
+    for path in sorted((ROOT / 'artifacts' / 'builds').glob('*.inventory.json')):
         report = json.loads(path.read_text())
-        output = path.with_name(path.name.removesuffix('.inventory.json') + '-sources.tar.gz')
+        output = path.with_name(path.name.removesuffix('.inventory.json') + '_sources.tar.gz')
         build_sources(report, collected_entries(ROOT / 'build' / 'rigctl-launcher'), ROOT, output,
                       SourceCache(ROOT / 'build' / 'notice-cache'))
         print(f'Collected matching sources: {output.name}')

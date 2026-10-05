@@ -65,7 +65,7 @@ python -m compileall -q rigctl_launcher tests
 
 Tests use synthetic device metadata and a fake daemon. No real radio serial port is opened and no CAT/PTT command is sent. See `verification.md` for validation results and `release.md` for branch, build and publication rules.
 
-To build an archive on the current operating system, install the build extra and run `python packaging/build.py`. The script verifies application metadata and an empty first launch using temporary configuration before producing an archive, dependency inventory and SHA-256 checksum under `artifacts/packages/`. Filenames include the version from `pyproject.toml`, operating system and processor architecture. That same version is used for native application metadata. Each build replaces this generated output directory.
+To build an archive on the current operating system, install the build extra and run `python packaging/build.py`. The script verifies application metadata and an empty first launch using temporary configuration before producing an archive, dependency inventory and SHA-256 checksum under `artifacts/builds/`. Filenames include the version from `pyproject.toml`, operating system and processor architecture. That same version is used for native application metadata. Each build replaces this generated output directory.
 
 Run `python packaging/sources.py` afterward to produce matching source downloads, provider recipes and build instructions for the native CI artifact. Public releases offer the application archives, one combined sources ZIP for all platforms, and `checksums.txt`. Inventories are included inside the downloads. About / Licenses provides local license texts and a link to the matching release.
 

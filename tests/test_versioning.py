@@ -18,9 +18,9 @@ def test_one_version_drives_all_platform_archive_names(tmp_path):
     details = version_details(project(tmp_path, '1.2.3rc1'))
     assert details['numeric_version'] == '1.2.3'
     assert details['windows_version'] == (1, 2, 3, 0)
-    assert archive_label(details, 'Darwin', 'aarch64') == 'rigctl-launcher-1.2.3rc1-macos-arm64'
-    assert archive_label(details, 'Windows', 'AMD64') == 'rigctl-launcher-1.2.3rc1-windows-x86_64'
-    assert archive_label(details, 'Linux', 'x86_64') == 'rigctl-launcher-1.2.3rc1-linux-x86_64'
+    assert archive_label(details, 'Darwin', 'aarch64') == 'rigctl-launcher_1.2.3rc1_macos-arm64'
+    assert archive_label(details, 'Windows', 'AMD64') == 'rigctl-launcher_1.2.3rc1_windows-x86_64'
+    assert archive_label(details, 'Linux', 'x86_64') == 'rigctl-launcher_1.2.3rc1_linux-x86_64'
 
 
 @pytest.mark.parametrize('version', ['bad version', '1!1.0', '1.2.3.4', '65536.0.0'])

@@ -111,7 +111,7 @@ def prepare_release(inputs, destination, version, expected_systems=('darwin', 'w
         labels.add(label)
         systems.add(target['os'])
         commits.add(inventory['application']['commit'])
-        source = inputs / (label + '-sources.tar.gz')
+        source = inputs / (label + '_sources.tar.gz')
         application = inputs / (label + ('.tar.gz' if target['os'] == 'linux' else '.zip'))
         verify_checksum(source)
         verify_checksum(application)
@@ -124,7 +124,7 @@ def prepare_release(inputs, destination, version, expected_systems=('darwin', 'w
         staging = Path(temporary)
         for application in applications:
             shutil.copyfile(application, staging / application.name)
-        combine_sources(reports, staging / f'rigctl-launcher-{version}-sources.zip')
+        combine_sources(reports, staging / f'rigctl-launcher_{version}_sources.zip')
         files = sorted(staging.iterdir())
         (staging / 'checksums.txt').write_text(''.join(f'{digest(path)}  {path.name}\n' for path in files))
         if destination.exists():

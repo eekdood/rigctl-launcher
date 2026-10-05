@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from build_support.inventory import write_inventory, collected_entries
 from build_support.notices import SourceCache, collect_notices
-from build_support.versioning import archive_label, write_spec, verify_metadata
+from build_support.versioning import archive_label, artifact_output, write_spec, verify_metadata
 
 
 def build():
@@ -23,7 +23,7 @@ def build():
     dist = ROOT / 'dist'
     system = platform.system().lower()
     label = archive_label(details)
-    archives = ROOT / 'artifacts' / 'packages'
+    archives = ROOT / 'artifacts' / 'builds'
     if archives.exists():
         shutil.rmtree(archives)
     archives.mkdir(parents=True)
@@ -84,6 +84,7 @@ def build():
     with archive.open('rb') as stream:
         digest = hashlib.file_digest(stream, 'sha256').hexdigest()
     archive.with_name(archive.name + '.sha256').write_text(f'{digest}  {archive.name}\n')
+    artifact_output(label)
     print(f'Built and smoke-tested {archive.name}')
 
 
