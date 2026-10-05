@@ -8,6 +8,6 @@ The source application has been exercised with offscreen and native UI widgets. 
 
 Local screenshots and build artifacts are ignored by Git and excluded from the application package. Test profiles, identifiers and paths are synthetic; personal configuration is not used as a test fixture or shipped as a default.
 
-Release preparation checks: 99 automated tests passed, including nine UI tests. All nine UI tests also passed using native macOS widgets. A macOS ARM64 PyInstaller app was built and passed an isolated empty-configuration smoke test. Windows and Linux jobs are configured but have not yet run; their packages and native behavior remain unverified.
+Release preparation checks: 99 automated tests passed, including nine UI tests. All nine UI tests also passed using native macOS widgets. A macOS ARM64 PyInstaller app was built and passed an isolated empty-configuration smoke test. GitHub Actions also passed on macOS ARM64 and Linux x86_64 (99 tests each), and Windows AMD64 (98 passed, one POSIX-only signal test skipped). All three produced archives and SHA-256 checksums and passed packaged empty-configuration smoke tests. Real desktop use, serial drivers and hardware compatibility on Windows/Linux remain unverified.
 
 Run the checks documented in `readme.md`. Public documentation does not include machine-specific device paths, local installation paths or private script references.
