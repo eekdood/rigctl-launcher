@@ -72,9 +72,30 @@ jobs:
           name: package-${{ matrix.os }}
           path: artifacts/packages/*
           if-no-files-found: error
+  prepare-release:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'packaging>=24,<27'
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: package-*
+          path: release-inputs
+          merge-multiple: true
+      - name: Assemble applications and one combined source ZIP
+        run: python packaging/release_assets.py release-inputs release-assets
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-assets
+          path: release-assets/*
+          if-no-files-found: error
   draft-release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: build
+    needs: prepare-release
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -82,12 +103,12 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
+          name: release-assets
           path: release-assets
-          merge-multiple: true
       - name: Create draft prerelease for review
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          printf '%s\n' 'Preview builds for native platform testing. These builds are unsigned and require separately installed Hamlib rigctld. Fresh installations start with no radio profiles. Platform build success does not establish hardware support.' '' 'Matching application/dependency sources, build instructions and provider patches are in the platform-specific -sources.tar.gz assets. License texts and third-party notices are included in the application and available through Help → About / Licenses.' > release-notes.txt
+          printf '%s\n' 'To run the app, download and extract the application archive matching your operating system and processor. The single -sources.zip download contains application/dependency sources, build instructions, inventories and provider patches for all platforms. checksums.txt verifies all four archives.' '' 'These preview builds are unsigned and require separately installed Hamlib rigctld. Fresh installations start with no radio profiles. Platform build success does not establish hardware support.' '' 'License texts and third-party notices are included in the application and available through Help → About / Licenses.' > release-notes.txt
           gh release create "$RELEASE_TAG" release-assets/* --verify-tag --draft --prerelease --title "RigCtl-Launcher $RELEASE_TAG" --notes-file release-notes.txt

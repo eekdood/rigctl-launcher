@@ -5,8 +5,11 @@ identifies the source archives by component, exact version, upstream URL and SHA
 `inventory.json` identifies the packaged modules and native providers. Sources are
 preserved as nested archives (tar detects their original compression).
 
-Extract `application.tar` to obtain the application, packaging scripts, tests and
-GitHub workflow from the recorded commit. Create a Python environment using the
+In the combined release ZIP, select your platform's `manifest.json` and extract
+the archive identified by `application_source` to obtain the application,
+packaging scripts, tests and GitHub workflow from the recorded commit. Shared
+upstream archive paths in that manifest are relative to the source ZIP's root
+`rigctl-launcher-sources/` directory. Create a Python environment using the
 recorded Python version, install `.[test,build]`, and run:
 
     python -m pytest -q
