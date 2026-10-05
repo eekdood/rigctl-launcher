@@ -68,3 +68,5 @@ Tests use synthetic device metadata and a fake daemon. No real radio serial port
 To build an archive on the current operating system, install the build extra and run `python packaging/build.py`. The script verifies an empty first launch using temporary configuration before producing an archive and SHA-256 checksum under `artifacts/packages/`.
 
 Source repository: [eekdood/rigctl-launcher](https://github.com/eekdood/rigctl-launcher). The project uses GPLv3; see [license.txt](license.txt). Hamlib remains a separately installed dependency. Packaged dependencies retain their own licenses.
+
+For changes, start a short-lived branch from current `main` and submit a pull request into `main`. Contributors can use a fork. After the checks pass, squash and merge, then delete the branch. See [release.md](release.md) for the repository and release workflow.
