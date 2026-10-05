@@ -25,3 +25,7 @@ The publication repository is `https://github.com/eekdood/rigctl-launcher`. Keep
 Use pull requests into `main`, with passing build checks required after their first successful run. A solo maintainer can use zero required approving reviews while still requiring a pull request and passing checks. Block force pushes and deletion of `main`. Preserve the long-lived `dev` branch when merging it.
 
 Keep Actions default permissions at read-only and leave workflow approval of pull requests disabled. The draft-release job grants write permission only where it creates a release. Issues are enabled for bug reports; project boards and a wiki are optional. Review pull requests and CI results before tagging a release.
+
+For local GitHub CLI setup, use GitHub's `noreply` commit address when email privacy is enabled. The CLI must have the `workflow` scope to push Actions workflow files; add it with `gh auth refresh --hostname github.com --scopes workflow` and complete the browser authorization. Do not disable email privacy protection to work around a rejected push.
+
+The initial import goes through a draft `dev` → `main` pull request. `main` requires pull requests, blocks force pushes/deletion, and applies its protections to administrators. Add the actual successful matrix build checks as required checks after their first run; this avoids assuming that an untested workflow is already working. Automatic branch deletion is disabled to preserve `dev`.
