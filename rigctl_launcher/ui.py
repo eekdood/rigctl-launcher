@@ -17,6 +17,7 @@ from .devices import Device, candidates, discover, unique_interfaces
 from .processes import Manager
 from .profiles import Settings, Store
 from .executable import INSTALL_MESSAGE, locate_executable
+from .version import application_version
 
 
 def button(text, callback):
@@ -471,6 +472,7 @@ class MainWindow(QMainWindow):
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("RigCtl-Launcher")
+    app.setApplicationVersion(application_version())
     try:
         window = MainWindow()
     except (OSError, ValueError, TypeError) as e:

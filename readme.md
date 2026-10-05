@@ -6,7 +6,7 @@ The app does not install or bundle Hamlib. It does not provide a CAT proxy, radi
 
 ## Install and launch
 
-For packaged releases, download the build matching your operating system and processor from the repository's Releases page. Packaged builds include the application's Python and UI runtime; Hamlib remains a separate prerequisite. Supported platforms and signing status will be stated in each release. Packaging is currently being prepared; native support is not implied by a successful automated build alone.
+For packaged releases, download the build matching your operating system and processor from the repository's Releases page. Extract the archive; its folder contains the application, documentation, inventory and third-party notices. Keep those files together when redistributing it. Packaged builds include the application's Python and UI runtime; Hamlib remains a separate prerequisite. Supported platforms and signing status will be stated in each release. Packaging is currently being prepared; native support is not implied by a successful automated build alone.
 
 For a source installation, use Python 3.11 or newer and an isolated environment:
 
@@ -65,7 +65,7 @@ python -m compileall -q rigctl_launcher tests
 
 Tests use synthetic device metadata and a fake daemon. No real radio serial port is opened and no CAT/PTT command is sent. See `verification.md` for validation results and `release.md` for branch, build and publication rules.
 
-To build an archive on the current operating system, install the build extra and run `python packaging/build.py`. The script verifies an empty first launch using temporary configuration before producing an archive and SHA-256 checksum under `artifacts/packages/`.
+To build an archive on the current operating system, install the build extra and run `python packaging/build.py`. The script verifies application metadata and an empty first launch using temporary configuration before producing an archive, dependency inventory and SHA-256 checksum under `artifacts/packages/`. Filenames include the version from `pyproject.toml`, operating system and processor architecture. That same version is used for native application metadata. Each build replaces this generated output directory.
 
 Source repository: [eekdood/rigctl-launcher](https://github.com/eekdood/rigctl-launcher). The project uses GPLv3; see [license.txt](license.txt). Hamlib remains a separately installed dependency. Packaged dependencies retain their own licenses.
 
