@@ -17,7 +17,7 @@ def inputs(root, version='0.1.0', commit='same-commit'):
     root.mkdir()
     for system, machine, label, extension in [('darwin', 'arm64', 'macos-arm64', '.zip'),
             ('windows', 'AMD64', 'windows-x86_64', '.zip'), ('linux', 'x86_64', 'linux-x86_64', '.tar.gz')]:
-        label = f'rigctl-launcher-{version}-{label}'
+        label = f'rigctl-launcher_{version}_{label}'
         report = {'application': {'version': version, 'commit': commit},
                   'target': {'os': system, 'architecture': machine}}
         (root / (label + '.inventory.json')).write_text(json.dumps(report))
@@ -26,7 +26,7 @@ def inputs(root, version='0.1.0', commit='same-commit'):
         manifest = {'application': report['application'], 'target': report['target'],
                     'upstream': [{'file': 'upstream/library.tar.gz', 'sha256': hashlib.sha256(upstream).hexdigest()}],
                     'native': [{'directory': 'native/provider', 'source': [{'file': 'patch.diff'}]}]}
-        path = root / (label + '-sources.tar.gz')
+        path = root / (label + '_sources.tar.gz')
         with tarfile.open(path, 'w:gz') as archive:
             files = {'application.tar': b'identical tracked snapshot', 'manifest.json': json.dumps(manifest).encode(),
                      'inventory.json': json.dumps(report).encode(), 'upstream/library.tar.gz': upstream,
@@ -43,13 +43,13 @@ def test_public_layout_has_one_source_zip_and_combined_checksums(tmp_path):
     source = inputs(tmp_path / 'inputs')
     output = tmp_path / 'public'
     names = prepare_release(source, output, '0.1.0')
-    assert names == ['checksums.txt', 'rigctl-launcher-0.1.0-linux-x86_64.tar.gz',
-                     'rigctl-launcher-0.1.0-macos-arm64.zip', 'rigctl-launcher-0.1.0-sources.zip',
-                     'rigctl-launcher-0.1.0-windows-x86_64.zip']
+    assert names == ['checksums.txt', 'rigctl-launcher_0.1.0_linux-x86_64.tar.gz',
+                     'rigctl-launcher_0.1.0_macos-arm64.zip', 'rigctl-launcher_0.1.0_sources.zip',
+                     'rigctl-launcher_0.1.0_windows-x86_64.zip']
     for line in (output / 'checksums.txt').read_text().splitlines():
         sha, name = line.split()
         assert hashlib.sha256((output / name).read_bytes()).hexdigest() == sha
-    with zipfile.ZipFile(output / 'rigctl-launcher-0.1.0-sources.zip') as archive:
+    with zipfile.ZipFile(output / 'rigctl-launcher_0.1.0_sources.zip') as archive:
         prefix = 'rigctl-launcher-sources/'
         shared = [name for name in archive.namelist() if name.startswith(prefix + 'shared/')]
         assert len(shared) == 2  # one app snapshot and one shared upstream archive
@@ -66,7 +66,7 @@ def test_public_layout_has_one_source_zip_and_combined_checksums(tmp_path):
 
 def test_release_rejects_missing_platforms_mismatched_versions_and_corrupt_downloads(tmp_path):
     root = inputs(tmp_path / 'inputs')
-    linux = root / 'rigctl-launcher-0.1.0-linux-x86_64.inventory.json'
+    linux = root / 'rigctl-launcher_0.1.0_linux-x86_64.inventory.json'
     original = linux.read_text()
     linux.unlink()
     with pytest.raises(ValueError, match='all expected platforms'):

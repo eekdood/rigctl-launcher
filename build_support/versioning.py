@@ -1,5 +1,6 @@
 """Generate public application metadata from pyproject.toml."""
 import json
+import os
 from pathlib import Path
 import platform
 import plistlib
@@ -29,7 +30,15 @@ def archive_label(details, system=None, machine=None):
     machine = (machine or platform.machine()).lower()
     system = {'darwin': 'macos'}.get(system, system)
     machine = {'amd64': 'x86_64', 'aarch64': 'arm64'}.get(machine, machine)
-    return f'rigctl-launcher-{details["version"]}-{system}-{machine}'
+    return f'rigctl-launcher_{details["version"]}_{system}-{machine}'
+
+
+def artifact_output(name):
+    """Expose the same native filename label to GitHub's artifact uploader."""
+    path = os.environ.get('GITHUB_OUTPUT')
+    if path:
+        with Path(path).open('a', encoding='utf-8') as stream:
+            stream.write(f'artifact_name={name}\n')
 
 
 def verify_metadata(target, details, system=None):

@@ -6,6 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from build_support.inventory import project_version
 from build_support.release_assets import prepare_release
+from build_support.versioning import artifact_output
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
@@ -14,3 +15,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
     for name in prepare_release(args.inputs, args.output, project_version(ROOT)):
         print(name)
+    artifact_output(f'rigctl-launcher_{project_version(ROOT)}_release')

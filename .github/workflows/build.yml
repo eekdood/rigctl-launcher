@@ -51,6 +51,7 @@ jobs:
       - name: Run automated tests (fake devices only)
         run: python -m pytest -q
       - name: Build and smoke-test packaged app
+        id: desktop-build
         run: python packaging/build.py
       - name: Refresh Linux native providers and rebuild against available sources
         if: runner.os == 'Linux'
@@ -59,7 +60,7 @@ jobs:
           import json
           from pathlib import Path
           import subprocess
-          report = json.loads(next(Path('artifacts/packages').glob('*.inventory.json')).read_text())
+          report = json.loads(next(Path('artifacts/builds').glob('*.inventory.json')).read_text())
           packages = sorted({c['name'] for c in report['components'] if c['provider'] == 'dpkg'})
           if packages:
               subprocess.run(['sudo', 'apt-get', 'install', '--only-upgrade', '-y', *packages], check=True)
@@ -69,12 +70,14 @@ jobs:
         run: python packaging/sources.py
       - uses: actions/upload-artifact@v7
         with:
-          name: package-${{ matrix.os }}
-          path: artifacts/packages/*
+          name: ${{ steps.desktop-build.outputs.artifact_name }}
+          path: artifacts/builds/*
           if-no-files-found: error
   prepare-release:
     needs: build
     runs-on: ubuntu-22.04
+    outputs:
+      artifact_name: ${{ steps.public-files.outputs.artifact_name }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -83,14 +86,15 @@ jobs:
       - run: python -m pip install 'packaging>=24,<27'
       - uses: actions/download-artifact@v8
         with:
-          pattern: package-*
+          pattern: rigctl-launcher_*_*-*
           path: release-inputs
           merge-multiple: true
       - name: Assemble applications and one combined source ZIP
+        id: public-files
         run: python packaging/release_assets.py release-inputs release-assets
       - uses: actions/upload-artifact@v7
         with:
-          name: release-assets
+          name: ${{ steps.public-files.outputs.artifact_name }}
           path: release-assets/*
           if-no-files-found: error
   draft-release:
@@ -103,12 +107,12 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
-          name: release-assets
+          name: ${{ needs.prepare-release.outputs.artifact_name }}
           path: release-assets
       - name: Create draft prerelease for review
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          printf '%s\n' 'To run the app, download and extract the application archive matching your operating system and processor. The single -sources.zip download contains application/dependency sources, build instructions, inventories and provider patches for all platforms. checksums.txt verifies all four archives.' '' 'These preview builds are unsigned and require separately installed Hamlib rigctld. Fresh installations start with no radio profiles. Platform build success does not establish hardware support.' '' 'License texts and third-party notices are included in the application and available through Help → About / Licenses.' > release-notes.txt
+          printf '%s\n' 'To run the app, download and extract the application archive matching your operating system and processor. The single _sources.zip download contains application/dependency sources, build instructions, inventories and provider patches for all platforms. checksums.txt verifies all four archives.' '' 'These preview builds are unsigned and require separately installed Hamlib rigctld. Fresh installations start with no radio profiles. Platform build success does not establish hardware support.' '' 'License texts and third-party notices are included in the application and available through Help → About / Licenses.' > release-notes.txt
           gh release create "$RELEASE_TAG" release-assets/* --verify-tag --draft --prerelease --title "RigCtl-Launcher $RELEASE_TAG" --notes-file release-notes.txt
