@@ -17,7 +17,7 @@ The initial public history must start with a sanitized snapshot. Earlier private
 
 Fresh builds start with no radio profiles and use application defaults. User profiles/settings, serial identities, device paths, executable overrides, diagnostics and signing material do not belong in release assets. Examples are generic and are not automatically loaded. Existing user configuration remains outside the installed application and is not reset by upgrades.
 
-Builds are created separately on their target operating system. PyInstaller packages the application runtime; it does not install or bundle Hamlib and does not produce an installer by itself. The initial workflow uses app/binary directory archives. Disk images, installers and signing can be added when platform testing justifies specific instructions. An unsigned build must be identified as such in release notes.
+Builds are created separately on their target operating system. Linux builds use the explicit `ubuntu-24.04` x86_64 runner as their baseline, including source collection and the X11 archive smoke test. Use Ubuntu 24.04 Desktop x86_64 for initial VM verification; older distributions and ARM64 Linux are not established targets for these downloads. PyInstaller packages the application runtime; it does not install or bundle Hamlib and does not produce an installer by itself. The initial workflow uses app/binary directory archives. Disk images, installers and signing can be added when platform testing justifies specific instructions. An unsigned build must be identified as such in release notes.
 
 Before the first public release:
 
@@ -35,7 +35,7 @@ The publication repository is `https://github.com/eekdood/rigctl-launcher`. `mai
 
 Review the change after its checks pass, then squash and merge. GitHub automatically deletes the merged branch. Update local `main` before starting the next change. There is no separate integration branch or extra merge step before a release.
 
-`main` requires pull requests, blocks force pushes/deletion, and applies its protections to administrators. Zero approving reviews are required for solo maintenance. The matrix checks `build (macos-14)`, `build (windows-2022)` and `build (ubuntu-22.04)` are required, with the branch up to date and results supplied by GitHub Actions.
+`main` requires pull requests, blocks force pushes/deletion, and applies its protections to administrators. Zero approving reviews are required for solo maintenance. The matrix checks `build (macos-14)`, `build (windows-2022)` and `build (ubuntu-24.04)` are required, with the branch up to date and results supplied by GitHub Actions.
 
 Keep Actions default permissions at read-only and leave workflow approval of pull requests disabled. The draft-release job grants write permission only where it creates a release. The official actions in the workflow use Node.js 24. Issues are enabled for bug reports; project boards and a wiki are optional. Review pull requests and CI results before tagging a release.
 
