@@ -1,0 +1,12 @@
+{
+  "id": "example-radio",
+  "name": "Example radio",
+  "model": 1,
+  "baud": null,
+  "match": {},
+  "manual_device": "",
+  "preferred_port": 4532,
+  "arguments": [],
+  "executable": "",
+  "verbosity": 3
+}

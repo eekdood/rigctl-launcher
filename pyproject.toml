@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rigctl-launcher"
+version = "0.1.0"
+description = "Local desktop manager for separately installed Hamlib rigctld"
+requires-python = ">=3.11"
+license = {file = "license.txt"}
+dependencies = ["PySide6>=6.8,<7", "pyserial>=3.5,<4"]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+build = ["PyInstaller>=6,<7"]
+
+[project.scripts]
+rigctl-launcher = "rigctl_launcher.ui:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools]
+license-files = ["license.txt"]
+
+[tool.setuptools.packages.find]
+include = ["rigctl_launcher*"]

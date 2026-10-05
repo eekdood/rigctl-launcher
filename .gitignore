@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+artifacts/
+build/
+dist/
+# Local configuration, exports, diagnostics and signing material
+profiles/
+settings.json
+local-config/
+*.log
+*.bundle
+*.p12
+*.pfx
+*.key
+.env
+.env.*
