@@ -6,7 +6,7 @@ The app does not install or bundle Hamlib. It does not provide a CAT proxy, radi
 
 ## Install and launch
 
-For packaged releases, download the build matching your operating system and processor from the repository's Releases page. Packaged builds include the application's Python and UI runtime; Hamlib remains a separate prerequisite. Supported platforms and signing status will be stated in each release. Packaging is currently being prepared; native support is not implied by a successful automated build alone.
+For packaged releases, download the build matching your operating system and processor from the repository's Releases page. Extract the archive; its folder contains the application, documentation, inventory and third-party notices. Keep those files together when redistributing it. Packaged builds include the application's Python and UI runtime; Hamlib remains a separate prerequisite. Supported platforms and signing status will be stated in each release. Packaging is currently being prepared; native support is not implied by a successful automated build alone.
 
 For a source installation, use Python 3.11 or newer and an isolated environment:
 

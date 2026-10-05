@@ -54,6 +54,8 @@ def native_provider(path):
             return {'name': parts[index + 1], 'version': parts[index + 2], 'provider': 'homebrew'}
     if sys.platform.startswith('linux'):
         result = subprocess.run(['dpkg-query', '-S', str(path)], capture_output=True, text=True, timeout=5, check=False)
+        if result.returncode and str(path).startswith('/usr/lib/'):
+            result = subprocess.run(['dpkg-query', '-S', str(path)[4:]], capture_output=True, text=True, timeout=5, check=False)
         if result.returncode == 0:
             package = result.stdout.split(': ', 1)[0].splitlines()[0]
             version = subprocess.run(['dpkg-query', '-W', '-f=${Version}', package], capture_output=True, text=True, timeout=5, check=False)
@@ -102,11 +104,13 @@ def describe_sources(entries, owners, packages, root, python_root=None, provider
             component = {'name': 'cpython', 'version': platform.python_version(), 'provider': 'python-runtime'}
         elif resolved.is_relative_to(root) and '.venv' not in resolved.relative_to(root).parts:
             component = {'name': 'rigctl-launcher', 'version': project_version(root), 'provider': 'project'}
+        elif sys.platform == 'win32' and name.startswith(('libcrypto', 'libssl', 'libffi')) and name.endswith('.dll'):
+            component = {'name': 'libffi' if name.startswith('libffi') else 'openssl', 'version': file_version(path), 'provider': 'windows-native-library'}
+        elif re.match(r'(vcruntime|msvcp|concrt|ucrtbase|api-ms-win-).*\.dll$', name):
+            component = {'name': 'microsoft-c-runtime', 'version': file_version(path), 'provider': 'windows-version-resource'}
         elif resolved in owners:
             key = owners[resolved]
             component = {**packages[key], 'provider': 'python-distribution'}
-        elif re.match(r'(vcruntime|msvcp|concrt|ucrtbase).*\.dll$', name):
-            component = {'name': 'microsoft-c-runtime', 'version': file_version(path), 'provider': 'windows-version-resource'}
         elif resolved.is_relative_to(python_root):
             component = {'name': 'cpython', 'version': platform.python_version(), 'provider': 'python-runtime'}
         else:
