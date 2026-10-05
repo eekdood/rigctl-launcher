@@ -14,6 +14,7 @@ def smoke_test():
     from rigctl_launcher.about import AboutDialog
 
     app = QApplication([])
+    print(f'Smoke test display plugin: {app.platformName()}', flush=True)
     app.setApplicationName('RigCtl-Launcher')
     app.setApplicationVersion(application_version())
     assert app.applicationVersion() == application_version()
