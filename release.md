@@ -10,10 +10,18 @@ Builds are created separately on their target operating system. PyInstaller pack
 
 Before the first public release:
 
-1. Choose a project license and add the applicable dependency notices.
+1. GPLv3 is selected in `license.txt`. Include the applicable dependency notices with distributable builds.
 2. Connect the intended GitHub repository and configure branch protections after the first push.
 3. Verify the packaged application on the advertised targets, including first launch, executable selection, serial discovery, fake-daemon lifecycle and saved configuration.
 4. Decide signing/notarization requirements and provide credentials through protected release secrets when needed.
 5. Review the version, then tag the reviewed `main` commit and push that specific branch/tag. Review the resulting draft before publishing it.
 
 Automated builds are not equivalent to confirmed native radio support. Hardware testing requires explicit authorization and is separate from CI. The initial release workflow does not run real radio sessions or automatically install Hamlib.
+
+## GitHub setup
+
+The publication repository is `https://github.com/eekdood/rigctl-launcher`. Keep `main` as the default branch and use `dev` for ongoing work. The GitHub license-only initial commit is preserved alongside the sanitized application snapshot.
+
+Use pull requests into `main`, with passing build checks required after their first successful run. A solo maintainer can use zero required approving reviews while still requiring a pull request and passing checks. Block force pushes and deletion of `main`. Preserve the long-lived `dev` branch when merging it.
+
+Keep Actions default permissions at read-only and leave workflow approval of pull requests disabled. The draft-release job grants write permission only where it creates a release. Issues are enabled for bug reports; project boards and a wiki are optional. Review pull requests and CI results before tagging a release.

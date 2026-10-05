@@ -14,6 +14,7 @@ def build():
     subprocess.run([
         sys.executable, '-m', 'PyInstaller', '--clean', '--noconfirm',
         '--windowed', '--onedir', '--name', 'rigctl-launcher',
+        '--add-data', f'{ROOT / "license.txt"}:.',
         '--paths', str(ROOT), '--specpath', str(ROOT / 'build'),
         str(ROOT / 'packaging' / 'entrypoint.py'),
     ], cwd=ROOT, check=True, env={**os.environ, 'PYINSTALLER_CONFIG_DIR': str(ROOT / 'build' / 'pyinstaller-cache')})

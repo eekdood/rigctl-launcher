@@ -66,3 +66,5 @@ python -m compileall -q rigctl_launcher tests
 Tests use synthetic device metadata and a fake daemon. No real radio serial port is opened and no CAT/PTT command is sent. See `verification.md` for validation results and `release.md` for branch, build and publication rules.
 
 To build an archive on the current operating system, install the build extra and run `python packaging/build.py`. The script verifies an empty first launch using temporary configuration before producing an archive and SHA-256 checksum under `artifacts/packages/`.
+
+Source repository: [eekdood/rigctl-launcher](https://github.com/eekdood/rigctl-launcher). The project uses GPLv3; see [license.txt](license.txt). Hamlib remains a separately installed dependency. Packaged dependencies retain their own licenses.
