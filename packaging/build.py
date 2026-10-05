@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from build_support.inventory import write_inventory
 
 
 def build():
@@ -32,6 +34,7 @@ def build():
         executable = target / ('rigctl-launcher.exe' if system == 'windows' else 'rigctl-launcher')
     # No serial discovery, real user configuration or radio processes in this test.
     subprocess.run([str(executable), '--smoke-test'], cwd=ROOT, check=True, timeout=30)
+    write_inventory(target, ROOT / 'build' / 'rigctl-launcher', ROOT, archives / f'{label}.inventory.json')
     if system == 'darwin':
         archive = archives / f'{label}.zip'
         subprocess.run(['ditto', '-c', '-k', '--keepParent', str(target), str(archive)], check=True)
