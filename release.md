@@ -1,17 +1,17 @@
 # Release preparation
 
-Use `main` as the only permanent branch. Create a short-lived branch for each change and open a pull request into `main`. Pull requests and pushes to `main` run CI. A version tag matching `pyproject.toml`, such as `v0.1.0`, triggers the build workflow only when its commit belongs to `main`. The workflow creates a **draft prerelease**, with downloads and checksums, for review before publication. A push to `main` without a version tag does not publish a release.
+Use `main` as the only permanent branch. Create a short-lived branch for each change and open a pull request into `main`. Pull requests and merges into `main` run CI; direct pushes to `main` remain blocked. A version tag matching `pyproject.toml`, such as `v0.1.0`, triggers the build workflow only when its commit belongs to `main`. The workflow creates a **draft prerelease**, with downloads and checksums, for review before publication. Merging a PR does not publish a release.
 
 CI work is staged to avoid rebuilding the same change after merge:
 
 | Trigger | Work performed |
 | --- | --- |
 | Pull request | Tests on all three platforms, native builds/smoke tests, notices and source collection, native artifact uploads |
-| Ordinary push to `main` | Tests on all three platforms, using test dependencies only |
+| PR merge into `main` | Tests on all three platforms, using test dependencies only |
 | Version tag push | Tests, native builds and sources, combined release assets, draft prerelease |
 | Manual run | Full build and combined assets by default; optional tests-only mode; no release creation |
 
-New commits cancel obsolete runs for the same PR or `main`. Version-tag release runs are not automatically canceled. Python dependency downloads are cached using `pyproject.toml`. Required check names remain unchanged so branch protection continues to apply.
+New commits cancel obsolete PR runs; subsequent merges cancel obsolete merge-test runs. Version-tag release runs are not automatically canceled. Python dependency downloads are cached using `pyproject.toml`. Required check names remain unchanged so branch protection continues to apply.
 
 The initial public history must start with a sanitized snapshot. Earlier private commits contained local profile configuration and must not be pushed as ancestors, branches or tags. Keep any private history archive outside the publication repository. Before publishing, review tracked files, reachable history, Git author identity, examples, documentation and build contents. Do not use a mirror push or blindly push all refs from a private development repository.
 
@@ -51,4 +51,4 @@ The public release assembler (`python packaging/release_assets.py INPUT OUTPUT`)
 
 Dependabot checks Python dependencies and GitHub Actions weekly. Review its pull requests through the normal build/source-collection checks so dependency upgrades also update the generated notices and source assets.
 
-`pyproject.toml` supplies the application version for archive/checksum/inventory filenames, Qt application metadata, macOS bundle metadata and Windows executable version resources. For example, version `0.1.0` produces `rigctl-launcher_0.1.0_macos-arm64.zip`. The stable macOS bundle identifier is `io.github.eekdood.rigctl-launcher`. Numeric native versions use the three release components (Windows adds a fourth zero); full prerelease versions remain in public application metadata and archive names. Each build verifies its packaged metadata before the smoke test. Generated specs and resource files stay in ignored build storage; only the public name, version and identifier are included in the application metadata. Builds replace the generated `artifacts/builds/` output directory so stale assets cannot enter a later release.
+`pyproject.toml` supplies the application version for Qt application metadata, macOS bundle metadata and Windows executable version resources. Only version-tag release builds use that version in download names. PR downloads use `rigctl-launcher_pr-N_COMMIT_PLATFORM`, and manual/local builds use `rigctl-launcher_dev_COMMIT_PLATFORM`, where COMMIT is the first seven characters of the checked-out Git commit. Merges into `main` run tests without creating downloads. For example, tag `v0.1.0` produces `rigctl-launcher_0.1.0_macos-arm64.zip`. The stable macOS bundle identifier is `io.github.eekdood.rigctl-launcher`. Numeric native versions use the three release components (Windows adds a fourth zero); full prerelease versions remain in public application metadata and tagged-release archive names. Each build verifies its packaged metadata before the smoke test. Generated specs and resource files stay in ignored build storage; only the public name, version and identifier are included in the application metadata. Builds replace the generated `artifacts/builds/` output directory so stale assets cannot enter a later release.

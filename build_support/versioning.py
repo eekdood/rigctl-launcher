@@ -25,12 +25,13 @@ def version_details(root):
             'display_name': DISPLAY_NAME}
 
 
-def archive_label(details, system=None, machine=None):
+def archive_label(details, system=None, machine=None, *, build_name=None):
     system = (system or platform.system()).lower()
     machine = (machine or platform.machine()).lower()
     system = {'darwin': 'macos'}.get(system, system)
     machine = {'amd64': 'x86_64', 'aarch64': 'arm64'}.get(machine, machine)
-    return f'rigctl-launcher_{details["version"]}_{system}-{machine}'
+    name = build_name or details["version"]
+    return f'rigctl-launcher_{name}_{system}-{machine}'
 
 
 def artifact_output(name):

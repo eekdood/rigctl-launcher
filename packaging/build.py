@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from build_support.inventory import write_inventory, collected_entries
+from build_support.naming import checkout_identity
 from build_support.notices import SourceCache, collect_notices
 from build_support.versioning import archive_label, artifact_output, write_spec, verify_metadata
 
@@ -22,7 +23,7 @@ def build():
     ], cwd=ROOT, check=True, env={**os.environ, 'PYINSTALLER_CONFIG_DIR': str(ROOT / 'build' / 'pyinstaller-cache')})
     dist = ROOT / 'dist'
     system = platform.system().lower()
-    label = archive_label(details)
+    label = archive_label(details, build_name=checkout_identity(ROOT, details["version"])["name"])
     archives = ROOT / 'artifacts' / 'builds'
     if archives.exists():
         shutil.rmtree(archives)

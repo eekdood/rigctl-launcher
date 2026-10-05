@@ -13,19 +13,23 @@ def checked(path, data):
     path.with_name(path.name + '.sha256').write_text(f'{hashlib.sha256(data).hexdigest()}  {path.name}\n')
 
 
-def inputs(root, version='0.1.0', commit='same-commit'):
+def inputs(root, version='0.1.0', commit='same-commit', identity=None):
     root.mkdir()
     for system, machine, label, extension in [('darwin', 'arm64', 'macos-arm64', '.zip'),
             ('windows', 'AMD64', 'windows-x86_64', '.zip'), ('linux', 'x86_64', 'linux-x86_64', '.tar.gz')]:
-        label = f'rigctl-launcher_{version}_{label}'
+        label = f'rigctl-launcher_{identity["name"] if identity else version}_{label}'
         report = {'application': {'version': version, 'commit': commit},
                   'target': {'os': system, 'architecture': machine}}
+        if identity:
+            report['build'] = identity
         (root / (label + '.inventory.json')).write_text(json.dumps(report))
         checked(root / (label + extension), ('application-' + system).encode())
         upstream = b'identical upstream source archive bytes'
         manifest = {'application': report['application'], 'target': report['target'],
                     'upstream': [{'file': 'upstream/library.tar.gz', 'sha256': hashlib.sha256(upstream).hexdigest()}],
                     'native': [{'directory': 'native/provider', 'source': [{'file': 'patch.diff'}]}]}
+        if identity:
+            manifest['build'] = identity
         path = root / (label + '_sources.tar.gz')
         with tarfile.open(path, 'w:gz') as archive:
             files = {'application.tar': b'identical tracked snapshot', 'manifest.json': json.dumps(manifest).encode(),
@@ -97,3 +101,19 @@ def test_source_archive_paths_and_links_cannot_escape_zip_layout(tmp_path):
             archive.addfile(info)
         with tarfile.open(path) as archive, pytest.raises(ValueError):
             source_members(archive)
+
+
+def test_manual_download_assembly_preserves_development_identity(tmp_path):
+    identity = {'kind': 'development', 'name': 'dev_a1b2c3d'}
+    source = inputs(tmp_path / 'inputs', identity=identity)
+    names = prepare_release(source, tmp_path / 'public', '0.1.0', identity=identity)
+    assert 'rigctl-launcher_dev_a1b2c3d_sources.zip' in names
+    assert all('0.1.0' not in name for name in names)
+    with pytest.raises(ValueError, match='Build identity differs'):
+        prepare_release(source, tmp_path / 'release', '0.1.0')
+    inventory = next(source.glob('*.inventory.json'))
+    report = json.loads(inventory.read_text())
+    report['build']['name'] = 'dev_different'
+    inventory.write_text(json.dumps(report))
+    with pytest.raises(ValueError, match='Build identity differs'):
+        prepare_release(source, tmp_path / 'mixed', '0.1.0', identity=identity)
