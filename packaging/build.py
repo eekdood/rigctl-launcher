@@ -1,5 +1,6 @@
 """Build and archive on the native OS. Includes application dependencies only."""
 import hashlib
+import json
 import os
 import platform
 import shutil
@@ -46,7 +47,30 @@ def build():
         shutil.rmtree(staging)
     staging.mkdir(parents=True)
     collect_notices(report, collected_entries(ROOT / 'build' / 'rigctl-launcher'), staging, SourceCache(ROOT / 'build' / 'notice-cache'))
-    shutil.copy2(staging / 'inventory.json', inventory_path)
+    # Embed notices so copying the app out of its archive keeps offline access.
+    legal = ROOT / 'build' / 'application-legal'
+    if legal.exists():
+        shutil.rmtree(legal)
+    shutil.copytree(staging / 'licenses', legal / 'licenses')
+    shutil.copy2(staging / 'third-party-notices.txt', legal / 'third-party-notices.txt')
+    shutil.copy2(ROOT / 'license.txt', legal / 'gpl-3.0.txt')
+    spec, _ = write_spec(ROOT, legal_root=legal)
+    subprocess.run([sys.executable, '-m', 'PyInstaller', '--noconfirm', str(spec)], cwd=ROOT,
+                   check=True, env={**os.environ, 'PYINSTALLER_CONFIG_DIR': str(ROOT / 'build' / 'pyinstaller-cache')})
+    verify_metadata(target, details)
+    subprocess.run([str(executable), '--smoke-test'], cwd=ROOT, check=True, timeout=30)
+    if system == 'darwin':
+        subprocess.run(['xattr', '-cr', str(target)], check=True)
+        subprocess.run(['codesign', '--verify', '--deep', '--strict', str(target)], check=True)
+    final = write_inventory(target, ROOT / 'build' / 'rigctl-launcher', ROOT, inventory_path)
+    final['notice_catalogs'] = report['notice_catalogs']
+    if 'embedded_runtime_dependencies' in report:
+        final['embedded_runtime_dependencies'] = report['embedded_runtime_dependencies']
+    notices = {component['id']: component.get('notice_catalog') for component in report['components']}
+    for component in final['components']:
+        component['notice_catalog'] = notices[component['id']]
+    inventory_path.write_text(json.dumps(final, indent=2, sort_keys=True) + '\n')
+    shutil.copy2(inventory_path, staging / 'inventory.json')
     shutil.copy2(ROOT / 'license.txt', staging / 'license.txt')
     shutil.copy2(ROOT / 'readme.md', staging / 'readme.md')
     shutil.copytree(target, staging / target.name, symlinks=True)

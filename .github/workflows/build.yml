@@ -32,13 +32,41 @@ jobs:
           python -c 'import os,tomllib; v=tomllib.load(open("pyproject.toml","rb"))["project"]["version"]; assert os.environ["GITHUB_REF_NAME"] == "v"+v, "Tag must match project version"'
       - name: Install Linux Qt runtime libraries
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libegl1 libopengl0 libxcb-cursor0
+        run: |
+          sudo python3 - <<'PY'
+          from pathlib import Path
+          for path in Path('/etc/apt/sources.list.d').glob('*.sources'):
+              text = path.read_text()
+              path.write_text(text.replace('Types: deb\n', 'Types: deb deb-src\n'))
+          for path in [Path('/etc/apt/sources.list'), *Path('/etc/apt/sources.list.d').glob('*.list')]:
+              if path.exists():
+                  text = path.read_text()
+                  extra = [line.replace('deb ', 'deb-src ', 1) for line in text.splitlines() if line.startswith('deb ')]
+                  path.write_text(text + '\n' + '\n'.join(extra) + '\n')
+          PY
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libopengl0 libxcb-cursor0
       - name: Install application and build tools
         run: python -m pip install -e ".[test,build]"
       - name: Run automated tests (fake devices only)
         run: python -m pytest -q
       - name: Build and smoke-test packaged app
         run: python packaging/build.py
+      - name: Refresh Linux native providers and rebuild against available sources
+        if: runner.os == 'Linux'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import subprocess
+          report = json.loads(next(Path('artifacts/packages').glob('*.inventory.json')).read_text())
+          packages = sorted({c['name'] for c in report['components'] if c['provider'] == 'dpkg'})
+          if packages:
+              subprocess.run(['sudo', 'apt-get', 'install', '--only-upgrade', '-y', *packages], check=True)
+          PY
+          python packaging/build.py
+      - name: Collect matching dependency sources and build recipes
+        run: python packaging/sources.py
       - uses: actions/upload-artifact@v7
         with:
           name: package-${{ matrix.os }}
@@ -61,5 +89,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          printf '%s\n' 'Preview builds for native platform testing. These builds are unsigned and require separately installed Hamlib rigctld. Fresh installations start with no radio profiles. Platform build success does not establish hardware support.' > release-notes.txt
+          printf '%s\n' 'Preview builds for native platform testing. These builds are unsigned and require separately installed Hamlib rigctld. Fresh installations start with no radio profiles. Platform build success does not establish hardware support.' '' 'Matching application/dependency sources, build instructions and provider patches are in the platform-specific -sources.tar.gz assets. License texts and third-party notices are included in the application and available through Help → About / Licenses.' > release-notes.txt
           gh release create "$RELEASE_TAG" release-assets/* --verify-tag --draft --prerelease --title "RigCtl-Launcher $RELEASE_TAG" --notes-file release-notes.txt

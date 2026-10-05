@@ -252,3 +252,18 @@ def test_settings_browse_and_binary_feedback(app, tmp_path, fake_executable, mon
     dialog.browse_executable()
     assert dialog.executable.text() == fake_executable
     assert 'Executable found' in dialog.executable_status.text()
+
+
+def test_about_licenses_are_local_and_readable(app, monkeypatch, tmp_path):
+    from rigctl_launcher.about import AboutDialog
+    (tmp_path / 'third-party-notices.txt').write_text('Qt copyright and license notice')
+    (tmp_path / 'gpl.txt').write_text('GPL terms available offline')
+    monkeypatch.setattr('rigctl_launcher.about.legal_directory', lambda: tmp_path)
+    dialog = AboutDialog()
+    dialog.show()
+    app.processEvents()
+    assert dialog.documents.count() == 2
+    assert 'Qt copyright' in dialog.text.toPlainText()
+    dialog.documents.setCurrentIndex(1)
+    assert dialog.text.toPlainText() == 'GPL terms available offline'
+    dialog.close()
