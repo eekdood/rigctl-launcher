@@ -2,6 +2,17 @@
 
 Use `main` as the only permanent branch. Create a short-lived branch for each change and open a pull request into `main`. Pull requests and pushes to `main` run CI. A version tag matching `pyproject.toml`, such as `v0.1.0`, triggers the build workflow only when its commit belongs to `main`. The workflow creates a **draft prerelease**, with downloads and checksums, for review before publication. A push to `main` without a version tag does not publish a release.
 
+CI work is staged to avoid rebuilding the same change after merge:
+
+| Trigger | Work performed |
+| --- | --- |
+| Pull request | Tests on all three platforms, native builds/smoke tests, notices and source collection, native artifact uploads |
+| Ordinary push to `main` | Tests on all three platforms, using test dependencies only |
+| Version tag push | Tests, native builds and sources, combined release assets, draft prerelease |
+| Manual run | Full build and combined assets by default; optional tests-only mode; no release creation |
+
+New commits cancel obsolete runs for the same PR or `main`. Version-tag release runs are not automatically canceled. Python dependency downloads are cached using `pyproject.toml`. Required check names remain unchanged so branch protection continues to apply.
+
 The initial public history must start with a sanitized snapshot. Earlier private commits contained local profile configuration and must not be pushed as ancestors, branches or tags. Keep any private history archive outside the publication repository. Before publishing, review tracked files, reachable history, Git author identity, examples, documentation and build contents. Do not use a mirror push or blindly push all refs from a private development repository.
 
 Fresh builds start with no radio profiles and use application defaults. User profiles/settings, serial identities, device paths, executable overrides, diagnostics and signing material do not belong in release assets. Examples are generic and are not automatically loaded. Existing user configuration remains outside the installed application and is not reset by upgrades.
@@ -36,7 +47,7 @@ Builds download matching upstream source archives into ignored `build/notice-cac
 
 After building, `python packaging/sources.py` creates a platform-specific `_sources.tar.gz` asset and checksum. It includes the tracked application snapshot, matching upstream archive bytes verified against notice provenance, inventory, source manifest and build instructions. Native Homebrew sources include the installed formula and pinned source/patch downloads; Debian/Ubuntu sources include exact source versions with `.dsc` and distribution patch/build files. Linux source repositories (`deb-src`) must be enabled before collecting sources; CI configures this on its runner. Missing sources, recipes or checksum mismatches fail collection. Source trees stay out of Git and application downloads. Publish source assets beside the matching application assets and preserve them for each release. The manifest identifies versions and archives; it does not claim byte-for-byte reproducible binaries.
 
-The public release assembler (`python packaging/release_assets.py INPUT OUTPUT`) verifies all three platform inputs and creates just the three application archives, one `rigctl-launcher_VERSION_sources.zip`, and `checksums.txt`. Inventories remain inside the application archives and the source ZIP. The source ZIP retains each platform's manifest, provider patches and build instructions; identical application/upstream source archives are stored once under `shared/`. The workflow tests this assembled layout on pull requests and `main` before using it for a tagged draft release. Native CI artifacts retain their fuller working layout.
+The public release assembler (`python packaging/release_assets.py INPUT OUTPUT`) verifies all three platform inputs and creates just the three application archives, one `rigctl-launcher_VERSION_sources.zip`, and `checksums.txt`. Inventories remain inside the application archives and the source ZIP. The source ZIP retains each platform's manifest, provider patches and build instructions; identical application/upstream source archives are stored once under `shared/`. Automated tests cover the assembled layout; tag pushes and full manual runs assemble the actual native outputs. Native PR artifacts retain their fuller working layout.
 
 Dependabot checks Python dependencies and GitHub Actions weekly. Review its pull requests through the normal build/source-collection checks so dependency upgrades also update the generated notices and source assets.
 
