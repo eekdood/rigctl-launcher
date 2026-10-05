@@ -17,18 +17,18 @@ KINDS = {'PYMODULE', 'PYSOURCE', 'BINARY', 'EXTENSION', 'DATA', 'EXECUTABLE'}
 
 def collected_entries(work):
     entries = set()
-    def walk(value):
-        if isinstance(value, (list, tuple)):
-            if len(value) == 3 and all(isinstance(x, str) for x in value) and value[2] in KINDS:
-                entries.add(tuple(value))
-            else:
-                for item in value:
-                    walk(item)
     paths = list(Path(work).glob('*.toc'))
     if not paths:
         raise ValueError('No PyInstaller collection records found')
     for path in paths:
-        walk(ast.literal_eval(path.read_text()))
+        # Windows EXE records also contain VSVersionInfo(...) expressions.
+        # Read only literal tagged triples; never evaluate surrounding objects.
+        for node in ast.walk(ast.parse(path.read_text())):
+            if isinstance(node, (ast.Tuple, ast.List)) and len(node.elts) == 3:
+                if all(isinstance(item, ast.Constant) and isinstance(item.value, str) for item in node.elts):
+                    value = tuple(item.value for item in node.elts)
+                    if value[2] in KINDS:
+                        entries.add(value)
     return sorted(entries)
 
 

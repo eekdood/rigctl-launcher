@@ -21,6 +21,13 @@ def test_native_provider_reads_homebrew_version_without_serial_probes(tmp_path):
     assert native_provider(path) == {'name': 'compression', 'version': '1.2.3_1', 'provider': 'homebrew'}
 
 
+def test_windows_version_resource_objects_do_not_break_inventory_or_execute(tmp_path):
+    (tmp_path / 'EXE-00.toc').write_text(
+        "('application', VSVersionInfo(ffi=FixedFileInfo(filevers=(0,1,0,0))), "
+        "[('main', 'main.py', 'PYSOURCE')], should_never_execute())")
+    assert collected_entries(tmp_path) == [('main', 'main.py', 'PYSOURCE')]
+
+
 def test_report_excludes_private_source_paths_and_marks_unknowns(tmp_path):
     project = tmp_path / 'private-owner' / 'project'
     project.mkdir(parents=True)

@@ -10,9 +10,12 @@ def smoke_test():
     from PySide6.QtWidgets import QApplication
     from rigctl_launcher.profiles import Settings, Store
     from rigctl_launcher.ui import MainWindow
+    from rigctl_launcher.version import application_version
 
     app = QApplication([])
     app.setApplicationName('RigCtl-Launcher')
+    app.setApplicationVersion(application_version())
+    assert app.applicationVersion() == application_version()
     with tempfile.TemporaryDirectory(prefix='rigctl-launcher-smoke-') as directory:
         store = Store(Path(directory))
         store.save_settings(Settings(executable=str(Path(directory) / 'missing-rigctld')))

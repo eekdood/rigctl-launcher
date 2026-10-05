@@ -11,29 +11,28 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from build_support.inventory import write_inventory, collected_entries
 from build_support.notices import SourceCache, collect_notices
+from build_support.versioning import archive_label, write_spec, verify_metadata
 
 
 def build():
+    spec, details = write_spec(ROOT)
     subprocess.run([
-        sys.executable, '-m', 'PyInstaller', '--clean', '--noconfirm',
-        '--windowed', '--onedir', '--name', 'rigctl-launcher',
-        '--additional-hooks-dir', str(ROOT / 'packaging' / 'hooks'),
-        '--add-data', f'{ROOT / "license.txt"}:.',
-        '--paths', str(ROOT), '--specpath', str(ROOT / 'build'),
-        str(ROOT / 'packaging' / 'entrypoint.py'),
+        sys.executable, '-m', 'PyInstaller', '--clean', '--noconfirm', str(spec),
     ], cwd=ROOT, check=True, env={**os.environ, 'PYINSTALLER_CONFIG_DIR': str(ROOT / 'build' / 'pyinstaller-cache')})
     dist = ROOT / 'dist'
     system = platform.system().lower()
-    machine = platform.machine().lower()
-    label = f'rigctl-launcher-{system}-{machine}'
+    label = archive_label(details)
     archives = ROOT / 'artifacts' / 'packages'
-    archives.mkdir(parents=True, exist_ok=True)
+    if archives.exists():
+        shutil.rmtree(archives)
+    archives.mkdir(parents=True)
     if system == 'darwin':
         target = dist / 'rigctl-launcher.app'
         executable = target / 'Contents' / 'MacOS' / 'rigctl-launcher'
     else:
         target = dist / 'rigctl-launcher'
         executable = target / ('rigctl-launcher.exe' if system == 'windows' else 'rigctl-launcher')
+    verify_metadata(target, details)
     # No serial discovery, real user configuration or radio processes in this test.
     subprocess.run([str(executable), '--smoke-test'], cwd=ROOT, check=True, timeout=30)
     if system == 'darwin':
