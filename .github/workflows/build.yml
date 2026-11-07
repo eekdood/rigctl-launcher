@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, windows-2022, ubuntu-24.04]
+        os: [macos-15, windows-2022, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     env:
       QT_QPA_PLATFORM: offscreen
@@ -96,6 +96,9 @@ jobs:
           trap 'rm -rf "$smoke_dir"' EXIT
           tar -xzf artifacts/builds/*_linux-*.tar.gz -C "$smoke_dir"
           timeout 30s xvfb-run -a env QT_QPA_PLATFORM=xcb "$smoke_dir/rigctl-launcher/rigctl-launcher/rigctl-launcher" --smoke-test
+      - name: Stage application-only downloads
+        if: env.BUILD_ARTIFACTS == 'true'
+        run: python packaging/downloads.py
       - name: Collect matching dependency sources and build recipes
         if: env.BUILD_ARTIFACTS == 'true'
         run: python packaging/sources.py
@@ -103,7 +106,17 @@ jobs:
         if: env.BUILD_ARTIFACTS == 'true'
         with:
           name: ${{ steps.desktop-build.outputs.artifact_name }}
-          path: artifacts/builds/*
+          path: artifacts/downloads/*
+          if-no-files-found: error
+      - name: Upload optional matching source materials
+        uses: actions/upload-artifact@v7
+        if: env.BUILD_ARTIFACTS == 'true'
+        with:
+          name: ${{ steps.desktop-build.outputs.artifact_name }}_sources
+          path: |
+            artifacts/builds/*_sources.tar.gz
+            artifacts/builds/*_sources.tar.gz.sha256
+            artifacts/builds/*.inventory.json
           if-no-files-found: error
   prepare-release:
     if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && inputs.build_artifacts)
@@ -111,6 +124,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       artifact_name: ${{ steps.public-files.outputs.artifact_name }}
+      source_artifact_name: ${{ steps.public-files.outputs.artifact_name }}_sources
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -128,7 +142,17 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.public-files.outputs.artifact_name }}
-          path: release-assets/*
+          path: |
+            release-assets/*
+            !release-assets/*_sources.zip
+          if-no-files-found: error
+      - name: Upload optional combined sources
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.public-files.outputs.artifact_name }}_sources
+          path: |
+            release-assets/*_sources.zip
+            release-assets/checksums.txt
           if-no-files-found: error
   draft-release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
@@ -141,6 +165,11 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: ${{ needs.prepare-release.outputs.artifact_name }}
+          path: release-assets
+      - name: Download matching source asset
+        uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.prepare-release.outputs.source_artifact_name }}
           path: release-assets
       - name: Create draft prerelease for review
         env:

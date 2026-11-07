@@ -72,3 +72,9 @@ Run `python packaging/sources.py` afterward to produce matching source downloads
 Source repository: [eekdood/rigctl-launcher](https://github.com/eekdood/rigctl-launcher). The project uses GPLv3; see [license.txt](license.txt). Hamlib remains a separately installed dependency. Packaged dependencies retain their own licenses.
 
 For changes, start a short-lived branch from current `main` and submit a pull request into `main`. Contributors can use a fork. After the checks pass, squash and merge, then delete the branch. See [release.md](release.md) for the repository and release workflow.
+
+## Downloading test builds
+
+In a successful pull-request Actions run, select the artifact for your operating system and processor. It contains only the application archive and its checksum. Extract the outer GitHub ZIP, then the application archive inside it. License texts and third-party notices are included with the app. Hamlib `rigctld` must be installed separately.
+
+Artifacts ending in `_sources` are optional source materials for the bundled dependencies, with the matching application snapshot and build records. They are separate downloads and are not needed to run the app. The repository contains the application code; it does not contain the bundled dependency sources.

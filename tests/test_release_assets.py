@@ -117,3 +117,26 @@ def test_manual_download_assembly_preserves_development_identity(tmp_path):
     inventory.write_text(json.dumps(report))
     with pytest.raises(ValueError, match='Build identity differs'):
         prepare_release(source, tmp_path / 'mixed', '0.1.0', identity=identity)
+
+
+def test_application_downloads_exclude_sources_sidecars_and_stale_files(tmp_path):
+    from build_support.downloads import stage_downloads
+    source = inputs(tmp_path / 'inputs')
+    (source / 'unrelated.zip').write_bytes(b'unrelated build file')
+    destination = tmp_path / 'downloads'
+    destination.mkdir()
+    (destination / 'old_sources.tar.gz').write_bytes(b'stale sources')
+    names = stage_downloads(source, destination)
+    assert len(names) == 6  # three native archives and their checksums
+    assert all('sources' not in name and 'inventory' not in name and 'unrelated' not in name for name in names)
+    assert all((destination / name).read_bytes() == (source / name).read_bytes() for name in names)
+    next(source.glob('*.zip')).write_bytes(b'corrupt application')
+    with pytest.raises(ValueError, match='Checksum mismatch'):
+        stage_downloads(source, destination)
+    assert sorted(path.name for path in destination.iterdir()) == names
+    with pytest.raises(ValueError, match='separate'):
+        stage_downloads(source, source / 'nested')
+    empty = tmp_path / 'empty'
+    empty.mkdir()
+    with pytest.raises(ValueError, match='No application'):
+        stage_downloads(empty, tmp_path / 'empty-downloads')

@@ -8,7 +8,9 @@ version = "0.1.0"
 description = "Local desktop manager for separately installed Hamlib rigctld"
 requires-python = ">=3.11"
 license = {file = "license.txt"}
-dependencies = ["PySide6>=6.8,<7", "pyserial>=3.5,<4"]
+# Keep release builds on the Qt version verified on all three platforms.
+# Dependabot proposes upgrades through the normal test/build review.
+dependencies = ["PySide6==6.11.2", "pyserial>=3.5,<4"]
 
 [project.optional-dependencies]
 test = ["pytest>=8,<10"]
